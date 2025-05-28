@@ -1,40 +1,46 @@
+//
+//  SearchBarView.swift
+//  Veou
+//
+//  Created by Serg Tsogtbaatar on 4/10/25.
+//
+
 import SwiftUI
 
 struct SearchBarView: View {
-    @Binding var searchText: String
-    @Binding var isSearching: Bool
-    var onSearch: () -> Void
+    @Binding var text: String
+    @Binding var isActive: Bool
+    let onTextChange: (String) -> Void
+    let onSubmit: () -> Void
     
     @FocusState private var isFocused: Bool
-    @State private var isEditing = false
     
     var body: some View {
         HStack {
             HStack {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(isFocused || !searchText.isEmpty ? .blue : .gray)
+                    .foregroundColor(isFocused || !text.isEmpty ? .blue : .gray)
                     .padding(.leading, 10)
                 
-                TextField("Where do you want to stream?", text: $searchText)
+                TextField("Where do you want to stream?", text: $text)
                     .padding(.vertical, 12)
                     .focused($isFocused)
-                    .onChange(of: isFocused) { _, newValue in
+                    .onSubmit(onSubmit)
+                    .onChange(of: text) { _, newValue in
+                        onTextChange(newValue)
+                    }
+                    .onChange(of: isFocused) { _, focused in
                         withAnimation(.easeInOut(duration: 0.2)) {
-                            isEditing = newValue
-                            if newValue {
-                                isSearching = true
+                            isActive = focused
+                            if focused && text.isEmpty {
+                                // Show popular places when search becomes active
+                                onTextChange("")
                             }
                         }
                     }
-                    .onSubmit {
-                        onSearch()
-                    }
                 
-                if isEditing || !searchText.isEmpty {
-                    Button(action: {
-                        searchText = ""
-                        onSearch()
-                    }) {
+                if isFocused || !text.isEmpty {
+                    Button(action: clearSearch) {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundColor(.gray)
                             .padding(.trailing, 8)
@@ -42,8 +48,7 @@ struct SearchBarView: View {
                     .transition(.opacity)
                 }
             }
-            .padding(.horizontal, 4)
-            .background(Color(.systemBackground))
+            .background(.regularMaterial)
             .cornerRadius(20)
             .overlay(
                 RoundedRectangle(cornerRadius: 20)
@@ -51,35 +56,39 @@ struct SearchBarView: View {
             )
             .shadow(color: Color.black.opacity(0.15), radius: 5, x: 0, y: 5)
             
-            if isEditing {
+            if isFocused {
                 Button("Cancel") {
-                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    dismissKeyboard()
                     withAnimation {
-                        searchText = ""
-                        isEditing = false
-                        isSearching = false
+                        text = ""
+                        isActive = false
                     }
                 }
                 .foregroundColor(.blue)
-                .padding(.trailing, 8)
                 .transition(.move(edge: .trailing).combined(with: .opacity))
             }
         }
-        .padding(.vertical, 8)
-        .animation(.easeInOut(duration: 0.2), value: isEditing)
-        .animation(.easeInOut(duration: 0.2), value: searchText)
+        .animation(.easeInOut(duration: 0.2), value: isFocused)
+    }
+    
+    private func clearSearch() {
+        text = ""
+        onTextChange("")
+    }
+    
+    private func dismissKeyboard() {
+        #if os(iOS)
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        #endif
     }
 }
 
 #Preview {
-    ZStack {
-        Color.gray.opacity(0.2).ignoresSafeArea()
-        
-        SearchBarView(
-            searchText: .constant(""),
-            isSearching: .constant(false),
-            onSearch: {}
-        )
-        .padding(.horizontal)
-    }
-}
+    SearchBarView(
+        text: .constant(""),
+        isActive: .constant(false),
+        onTextChange: { _ in },
+        onSubmit: { }
+    )
+    .padding()
+} 
