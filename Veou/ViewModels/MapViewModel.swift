@@ -23,18 +23,20 @@ class MapViewModel: ObservableObject {
     private var locationUpdateTask: Task<Void, Never>?
     
     init() {
-        // Request location immediately
-        LocationManager.shared.requestAuthorization()
+        // Don't request location in init - defer to setupInitialLocation
     }
     
     func setupInitialLocation() {
+        // Request location authorization
+        LocationManager.shared.requestAuthorization()
+        
         // Start with user location, then refine after a moment
         locationUpdateTask = Task {
-            // Wait for location to become available
-            for attempt in 0..<10 {
+            // Wait for location to become available (reduced attempts for faster startup)
+            for attempt in 0..<5 {
                 if let userLocation = LocationManager.shared.userLocation {
                     await MainActor.run {
-                        withAnimation(.easeInOut(duration: 1.0)) {
+                        withAnimation(.easeInOut(duration: 0.8)) {
                             cameraPosition = .region(
                                 MKCoordinateRegion(
                                     center: userLocation,
@@ -45,7 +47,7 @@ class MapViewModel: ObservableObject {
                     }
                     return
                 }
-                try? await Task.sleep(for: .milliseconds(300))
+                try? await Task.sleep(for: .milliseconds(400))
             }
             
             // If still no location, keep the fallback region

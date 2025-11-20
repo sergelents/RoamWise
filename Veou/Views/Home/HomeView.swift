@@ -64,49 +64,17 @@ struct HomeView: View {
                 TabBarView(selectedTab: .constant(0))
             }
             
-                // Floating Action Buttons
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        VStack(spacing: 16) {
-                            // Location button (white circular FAB)
-                            Button(action: {
-                                mapViewModel.recenterToUserLocation()
-                            }) {
-                                Image(systemName: "location")
-                                    .font(.system(size: 20, weight: .medium))
-                                    .foregroundColor(.gray)
-                                    .frame(width: 56, height: 56)
-                                    .background(Color.white)
-                                    .clipShape(Circle())
-                                    .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
-                            }
-                            
-                            // Add Review button (coral FAB)
-                            Button(action: {
-                                // Use selected place if available, otherwise use the most recent annotation
-                                let placeToReview = mapViewModel.selectedPlace ?? mapViewModel.annotations.last
-                                if let place = placeToReview {
-                                    navigationPath.append(place)
-                                }
-                            }) {
-                                Image(systemName: "plus")
-                                    .font(.system(size: 24, weight: .semibold))
-                                    .foregroundColor(.white)
-                                    .frame(width: 56, height: 56)
-                                    .background(Color(red: 1.0, green: 0.42, blue: 0.42))
-                                    .clipShape(Circle())
-                                    .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
-                            }
-                            .opacity(!mapViewModel.annotations.isEmpty ? 1.0 : 0.5)
-                            .disabled(mapViewModel.annotations.isEmpty)
-                        }
-                        .padding(.trailing, 24)
-                        .padding(.bottom, 120)
-                    }
+            FloatingActionButtons(
+                annotations: mapViewModel.annotations,
+                selectedPlace: mapViewModel.selectedPlace,
+                onLocationTap: {
+                    mapViewModel.recenterToUserLocation()
+                },
+                onAddReviewTap: { place in
+                    navigationPath.append(place)
                 }
-            }
+            )
+        }
             .navigationDestination(for: PlaceAnnotation.self) { place in
                 AddReviewView(place: place)
             }
@@ -136,9 +104,10 @@ struct HomeView: View {
                     .presentationDragIndicator(.hidden)
                 }
             }
-            .onAppear {
-            mapViewModel.setupInitialLocation()
-        }
+            .task {
+                // Async initialization - doesn't block UI rendering
+                mapViewModel.setupInitialLocation()
+            }
     }
     
     private func selectLocation(_ suggestion: SearchSuggestion) {
@@ -159,16 +128,12 @@ struct HomeView: View {
                     subtitle: suggestion.subtitle
                 )
             } else {
-                searchViewModel.getCoordinates(for: suggestion) { coordinates in
-                    Task { @MainActor in
-                        if let coordinates = coordinates {
-                            mapViewModel.moveToLocation(
-                                coordinates,
-                                title: suggestion.title,
-                                subtitle: suggestion.subtitle
-                            )
-                        }
-                    }
+                if let coordinates = await searchViewModel.getCoordinates(for: suggestion) {
+                    mapViewModel.moveToLocation(
+                        coordinates,
+                        title: suggestion.title,
+                        subtitle: suggestion.subtitle
+                    )
                 }
             }
         }
@@ -180,16 +145,12 @@ struct HomeView: View {
         
         // Use async/await for better performance
         Task { @MainActor in
-            searchViewModel.performDetailedSearch(searchText) { coordinates in
-                Task { @MainActor in
-                    if let coordinates = coordinates {
-                        mapViewModel.moveToLocation(
-                            coordinates,
-                            title: searchText,
-                            subtitle: ""
-                        )
-                    }
-                }
+            if let coordinates = await searchViewModel.performDetailedSearch(searchText) {
+                mapViewModel.moveToLocation(
+                    coordinates,
+                    title: searchText,
+                    subtitle: ""
+                )
             }
         }
     }

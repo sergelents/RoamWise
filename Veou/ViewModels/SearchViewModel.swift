@@ -20,17 +20,30 @@ class SearchViewModel: NSObject, ObservableObject {
     
     private var searchTask: Task<Void, Never>?
     
+    private var hasLoadedPopularPlaces = false
+    
     override init() {
         super.init()
         completer.delegate = self
         completer.resultTypes = [.pointOfInterest, .address]
         setupCompleterRegion()
+        // Defer popular places loading - will load on first search interaction
+    }
+    
+    func loadPopularPlacesIfNeeded() {
+        guard !hasLoadedPopularPlaces else { return }
+        hasLoadedPopularPlaces = true
         fetchPopularNearbyPlaces()
     }
     
     func updateSearchText(_ text: String) {
         searchText = text
         showResults = !text.isEmpty
+        
+        // Lazy load popular places on first search interaction (when search bar is focused)
+        if !hasLoadedPopularPlaces && showResults {
+            loadPopularPlacesIfNeeded()
+        }
         
         // Cancel previous search task to prevent jank
         searchTask?.cancel()
@@ -43,8 +56,8 @@ class SearchViewModel: NSObject, ObservableObject {
             guard !Task.isCancelled else { return }
             
             if text.isEmpty {
-                // Show popular nearby places when search is empty
-                suggestions = popularNearbyPlaces
+                // Show popular nearby places when search is empty (if loaded)
+                suggestions = hasLoadedPopularPlaces ? popularNearbyPlaces : []
             } else if text.count <= 2 {
                 // Show popular places immediately for 1-2 characters
                 let filteredPopular = popularNearbyPlaces.filter { place in
@@ -149,67 +162,50 @@ class SearchViewModel: NSObject, ObservableObject {
         }
     }
     
-    func getCoordinates(for suggestion: SearchSuggestion, completion: @escaping (CLLocationCoordinate2D?) -> Void) {
+    func getCoordinates(for suggestion: SearchSuggestion) async -> CLLocationCoordinate2D? {
         // If we already have coordinates, use them immediately
         if let coordinates = suggestion.coordinates {
-            Task { @MainActor in
-                completion(coordinates)
-            }
-            return
+            return coordinates
         }
         
-        // Use async/await for better performance on iOS 17.6
-        Task {
-            let request = MKLocalSearch.Request()
-            request.naturalLanguageQuery = "\(suggestion.title), \(suggestion.subtitle)"
-            
-            if let userLocation = LocationManager.shared.userLocation {
-                request.region = MKCoordinateRegion(
-                    center: userLocation,
-                    span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
-                )
-            }
-            
-            let search = MKLocalSearch(request: request)
-            
-            do {
-                let response = try await search.start()
-                await MainActor.run {
-                    completion(response.mapItems.first?.placemark.coordinate)
-                }
-            } catch {
-                await MainActor.run {
-                    completion(nil)
-                }
-            }
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = "\(suggestion.title), \(suggestion.subtitle)"
+        
+        if let userLocation = LocationManager.shared.userLocation {
+            request.region = MKCoordinateRegion(
+                center: userLocation,
+                span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
+            )
+        }
+        
+        let search = MKLocalSearch(request: request)
+        
+        do {
+            let response = try await search.start()
+            return response.mapItems.first?.placemark.coordinate
+        } catch {
+            return nil
         }
     }
     
-    func performDetailedSearch(_ query: String, completion: @escaping (CLLocationCoordinate2D?) -> Void) {
-        // Use async/await for better performance on iOS 17.6
-        Task {
-            let request = MKLocalSearch.Request()
-            request.naturalLanguageQuery = query
-            
-            if let userLocation = LocationManager.shared.userLocation {
-                request.region = MKCoordinateRegion(
-                    center: userLocation,
-                    span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
-                )
-            }
-            
-            let search = MKLocalSearch(request: request)
-            
-            do {
-                let response = try await search.start()
-                await MainActor.run {
-                    completion(response.mapItems.first?.placemark.coordinate)
-                }
-            } catch {
-                await MainActor.run {
-                    completion(nil)
-                }
-            }
+    func performDetailedSearch(_ query: String) async -> CLLocationCoordinate2D? {
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = query
+        
+        if let userLocation = LocationManager.shared.userLocation {
+            request.region = MKCoordinateRegion(
+                center: userLocation,
+                span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
+            )
+        }
+        
+        let search = MKLocalSearch(request: request)
+        
+        do {
+            let response = try await search.start()
+            return response.mapItems.first?.placemark.coordinate
+        } catch {
+            return nil
         }
     }
     

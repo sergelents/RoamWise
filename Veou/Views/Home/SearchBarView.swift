@@ -32,9 +32,9 @@ struct SearchBarView: View {
                     .onChange(of: isFocused) { _, focused in
                         withAnimation(.easeInOut(duration: 0.2)) {
                             isActive = focused
-                            if focused && text.isEmpty {
-                                // Show popular places when search becomes active
-                                onTextChange("")
+                            if focused {
+                                // Trigger lazy loading of popular places when search is first focused
+                                onTextChange(text.isEmpty ? "" : text)
                             }
                         }
                     }
