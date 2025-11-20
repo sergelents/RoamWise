@@ -11,6 +11,7 @@ struct MapView: View {
     var body: some View {
         Map(position: $cameraPosition, interactionModes: .all) {
             // User location with blue dot and pulsing animation
+            // This will automatically show when location is available
             UserAnnotation()
             
             // Add place annotations - optimized for iOS 17.6
@@ -27,15 +28,52 @@ struct MapView: View {
             }
         }
         .mapStyle(.standard)
-        .safeAreaInset(edge: .bottom) {
-            HStack {
-                Spacer()
-                MapControls(cameraPosition: $cameraPosition)
-                    .padding(.trailing)
-            }
-            .padding(.bottom, 100)
+        .mapControls {
+            // Enable user location button (this also helps show the blue dot)
+            MapUserLocationButton()
         }
+//        .safeAreaInset(edge: .top, alignment: .trailing) {
+//            // Zoom controls in top right (Google Maps style)
+//            VStack(spacing: 0) {
+//                ZoomButton(icon: "plus", action: zoomIn)
+//                Divider()
+//                    .frame(width: 44)
+//                    .background(Color.gray.opacity(0.3))
+//                ZoomButton(icon: "minus", action: zoomOut)
+//            }
+//            .background(.ultraThinMaterial)
+//            .clipShape(RoundedRectangle(cornerRadius: 8))
+//            .shadow(color: Color.black.opacity(0.2), radius: 4, x: 0, y: 2)
+//            .padding(.trailing, 16)
+//            .padding(.top, 8)
+//        }
     }
+    
+//    private func zoomIn() {
+//        // Get current region and zoom in
+//        if case .region(let region) = cameraPosition {
+//            let newSpan = MKCoordinateSpan(
+//                latitudeDelta: region.span.latitudeDelta * 0.5,
+//                longitudeDelta: region.span.longitudeDelta * 0.5
+//            )
+//            withAnimation(.easeInOut(duration: 0.3)) {
+//                cameraPosition = .region(MKCoordinateRegion(center: region.center, span: newSpan))
+//            }
+//        }
+//    }
+    
+//    private func zoomOut() {
+//        // Get current region and zoom out
+//        if case .region(let region) = cameraPosition {
+//            let newSpan = MKCoordinateSpan(
+//                latitudeDelta: min(region.span.latitudeDelta * 2.0, 180.0),
+//                longitudeDelta: min(region.span.longitudeDelta * 2.0, 180.0)
+//            )
+//            withAnimation(.easeInOut(duration: 0.3)) {
+//                cameraPosition = .region(MKCoordinateRegion(center: region.center, span: newSpan))
+//            }
+//        }
+//    }
 }
 
 // MARK: - Pin Annotation View
@@ -87,56 +125,23 @@ struct PinAnnotationView: View {
     }
 }
 
-// MARK: - Map Controls
-struct MapControls: View {
-    @Binding var cameraPosition: MapCameraPosition
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            MapControlButton(icon: "plus", action: {})
-            Divider().background(Color.gray.opacity(0.3)).frame(width: 30)
-            MapControlButton(icon: "location", action: recenterToUserLocation)
-            Divider().background(Color.gray.opacity(0.3)).frame(width: 30)
-            MapControlButton(icon: "minus", action: {})
-        }
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 2)
-    }
-    
-    private func recenterToUserLocation() {
-        guard let userLocation = LocationManager.shared.userLocation else {
-            LocationManager.shared.requestAuthorization()
-            return
-        }
-        
-        withAnimation {
-            cameraPosition = .region(
-                MKCoordinateRegion(
-                    center: userLocation,
-                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                )
-            )
-        }
-    }
-}
-
-struct MapControlButton: View {
+// MARK: - Zoom Button
+struct ZoomButton: View {
     let icon: String
     let action: () -> Void
     
     var body: some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.system(size: 18, weight: .medium))
                 .foregroundColor(.primary)
                 .frame(width: 44, height: 44)
         }
-        .buttonStyle(MapControlButtonStyle())
+        .buttonStyle(ZoomButtonStyle())
     }
 }
 
-struct MapControlButtonStyle: ButtonStyle {
+struct ZoomButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .background(configuration.isPressed ? Color.gray.opacity(0.2) : Color.clear)

@@ -12,7 +12,12 @@ import CoreLocation
 
 @MainActor
 class MapViewModel: ObservableObject {
-    @Published var cameraPosition: MapCameraPosition = .automatic
+    @Published var cameraPosition: MapCameraPosition = .userLocation(fallback: .region(
+        MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194),
+            span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+        )
+    ))
     @Published var selectedPlace: PlaceAnnotation?
     @Published var annotations: [PlaceAnnotation] = []
     private var locationUpdateTask: Task<Void, Never>?
@@ -23,9 +28,10 @@ class MapViewModel: ObservableObject {
     }
     
     func setupInitialLocation() {
-        // Try multiple times to get location
+        // Start with user location, then refine after a moment
         locationUpdateTask = Task {
-            for attempt in 0..<5 {
+            // Wait for location to become available
+            for attempt in 0..<10 {
                 if let userLocation = LocationManager.shared.userLocation {
                     await MainActor.run {
                         withAnimation(.easeInOut(duration: 1.0)) {
@@ -39,18 +45,11 @@ class MapViewModel: ObservableObject {
                     }
                     return
                 }
-                try? await Task.sleep(for: .milliseconds(500))
+                try? await Task.sleep(for: .milliseconds(300))
             }
             
-            // Fallback to San Francisco if location not available
-            await MainActor.run {
-                cameraPosition = .region(
-                    MKCoordinateRegion(
-                        center: CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194),
-                        span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-                    )
-                )
-            }
+            // If still no location, keep the fallback region
+            // The UserAnnotation will still show if location becomes available later
         }
     }
     

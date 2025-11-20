@@ -62,28 +62,44 @@ struct HomeView: View {
                 TabBarView(selectedTab: .constant(0))
             }
             
-                // Floating Action Button
+                // Floating Action Buttons
                 VStack {
                     Spacer()
                     HStack {
                         Spacer()
-                        Button(action: {
-                            // Use selected place if available, otherwise use the most recent annotation
-                            let placeToReview = mapViewModel.selectedPlace ?? mapViewModel.annotations.last
-                            if let place = placeToReview {
-                                navigationPath.append(place)
+                        VStack(spacing: 16) {
+                            // Location button (white circular FAB)
+                            Button(action: {
+                                mapViewModel.recenterToUserLocation()
+                            }) {
+                                Image(systemName: "location")
+                                    .font(.system(size: 20, weight: .medium))
+                                    .foregroundColor(.gray)
+                                    .frame(width: 56, height: 56)
+                                    .background(Color.white)
+                                    .clipShape(Circle())
+                                    .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
                             }
-                        }) {
-                            Image(systemName: "plus")
-                                .font(.system(size: 24, weight: .semibold))
-                                .foregroundColor(.white)
-                                .frame(width: 56, height: 56)
-                                .background(Color(red: 1.0, green: 0.42, blue: 0.42))
-                                .clipShape(Circle())
-                                .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
+                            
+                            // Add Review button (coral FAB)
+                            Button(action: {
+                                // Use selected place if available, otherwise use the most recent annotation
+                                let placeToReview = mapViewModel.selectedPlace ?? mapViewModel.annotations.last
+                                if let place = placeToReview {
+                                    navigationPath.append(place)
+                                }
+                            }) {
+                                Image(systemName: "plus")
+                                    .font(.system(size: 24, weight: .semibold))
+                                    .foregroundColor(.white)
+                                    .frame(width: 56, height: 56)
+                                    .background(Color(red: 1.0, green: 0.42, blue: 0.42))
+                                    .clipShape(Circle())
+                                    .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
+                            }
+                            .opacity(!mapViewModel.annotations.isEmpty ? 1.0 : 0.5)
+                            .disabled(mapViewModel.annotations.isEmpty)
                         }
-                        .opacity(!mapViewModel.annotations.isEmpty ? 1.0 : 0.5)
-                        .disabled(mapViewModel.annotations.isEmpty)
                         .padding(.trailing, 24)
                         .padding(.bottom, 120)
                     }

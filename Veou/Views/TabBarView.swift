@@ -5,11 +5,8 @@ struct TabBarView: View {
     
     // Tab items data
     private let tabs = [
-        TabItem(icon: "house.fill", title: "Home"),
-        TabItem(icon: "magnifyingglass", title: "Search"),
-        TabItem(icon: "person.fill", title: "Profile"),
-        TabItem(icon: "bell.fill", title: "Notifications"),
-        TabItem(icon: "gear", title: "Settings")
+        TabItem(icon: "safari.fill", title: "Explore"),
+        TabItem(icon: "person.fill", title: "Profile")
     ]
     
     var body: some View {

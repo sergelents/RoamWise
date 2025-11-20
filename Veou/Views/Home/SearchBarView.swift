@@ -22,7 +22,7 @@ struct SearchBarView: View {
                     .foregroundColor(isFocused || !text.isEmpty ? .blue : .gray)
                     .padding(.leading, 10)
                 
-                TextField("Where do you want to stream?", text: $text)
+                TextField("Choose your location", text: $text)
                     .padding(.vertical, 12)
                     .focused($isFocused)
                     .onSubmit(onSubmit)
