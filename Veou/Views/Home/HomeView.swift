@@ -12,9 +12,11 @@ struct HomeView: View {
     @StateObject private var mapViewModel = MapViewModel()
     @StateObject private var searchViewModel = SearchViewModel()
     @State private var showLocationDetail = false
+    @State private var navigationPath = NavigationPath()
     
     var body: some View {
-        ZStack(alignment: .top) {
+        NavigationStack(path: $navigationPath) {
+            ZStack(alignment: .top) {
             MapView(
                 cameraPosition: $mapViewModel.cameraPosition,
                 annotations: mapViewModel.annotations,
@@ -58,15 +60,46 @@ struct HomeView: View {
                 Spacer()
                 TabBarView(selectedTab: .constant(0))
             }
-        }
-        .sheet(isPresented: $showLocationDetail) {
-            if let place = mapViewModel.selectedPlace {
-                LocationDetailView(place: place, isPresented: $showLocationDetail)
-                    .presentationDetents([.height(420)])
-                    .presentationDragIndicator(.hidden)
+            
+                // Floating Action Button
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            // Use selected place if available, otherwise use the most recent annotation
+                            let placeToReview = mapViewModel.selectedPlace ?? mapViewModel.annotations.last
+                            if let place = placeToReview {
+                                navigationPath.append(place)
+                            }
+                        }) {
+                            Image(systemName: "plus")
+                                .font(.system(size: 24, weight: .semibold))
+                                .foregroundColor(.white)
+                                .frame(width: 56, height: 56)
+                                .background(Color(red: 1.0, green: 0.42, blue: 0.42))
+                                .clipShape(Circle())
+                                .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
+                        }
+                        .opacity(!mapViewModel.annotations.isEmpty ? 1.0 : 0.5)
+                        .disabled(mapViewModel.annotations.isEmpty)
+                        .padding(.trailing, 24)
+                        .padding(.bottom, 120)
+                    }
+                }
+            }
+            .navigationDestination(for: PlaceAnnotation.self) { place in
+                AddReviewView(place: place)
             }
         }
-        .onAppear {
+            .sheet(isPresented: $showLocationDetail) {
+                if let place = mapViewModel.selectedPlace {
+                    LocationDetailView(place: place, isPresented: $showLocationDetail)
+                        .presentationDetents([.height(420)])
+                        .presentationDragIndicator(.hidden)
+                }
+            }
+            .onAppear {
             mapViewModel.setupInitialLocation()
         }
     }

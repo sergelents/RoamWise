@@ -20,7 +20,7 @@ struct SearchSuggestion: Identifiable {
 }
 
 // MARK: - Place Annotation
-struct PlaceAnnotation: Identifiable, Equatable {
+struct PlaceAnnotation: Identifiable, Equatable, Hashable {
     let id = UUID()
     let coordinate: CLLocationCoordinate2D
     let title: String
@@ -47,6 +47,11 @@ struct PlaceAnnotation: Identifiable, Equatable {
     // Custom Equatable implementation
     static func == (lhs: PlaceAnnotation, rhs: PlaceAnnotation) -> Bool {
         lhs.id == rhs.id
+    }
+    
+    // Custom Hashable implementation
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }
 
