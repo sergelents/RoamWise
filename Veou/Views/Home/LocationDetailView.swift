@@ -10,6 +10,7 @@ import SwiftUI
 struct LocationDetailView: View {
     let place: PlaceAnnotation
     @Binding var isPresented: Bool
+    var onViewReviews: (() -> Void)?
     
     var body: some View {
         VStack(spacing: 0) {
@@ -79,10 +80,14 @@ struct LocationDetailView: View {
                                     .fill(crowdColor.opacity(0.15))
                                     .frame(width: 60, height: 60)
                                 
-                                Image(systemName: "plus")
-                                    .font(.system(size: 24, weight: .semibold))
+                                Text(place.crowdLevel.rawValue)
+                                    .font(.system(size: 16, weight: .semibold))
                                     .foregroundColor(crowdColor)
                             }
+                            
+                            Image(systemName: place.crowdLevel.icon)
+                                .font(.system(size: 20))
+                                .foregroundColor(.gray.opacity(0.6))
                             
                             Text("Crowd")
                                 .font(.system(size: 14))
@@ -111,7 +116,10 @@ struct LocationDetailView: View {
                 
                 // View All Reviews button
                 Button(action: {
-                    // Action for viewing all reviews
+                    isPresented = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        onViewReviews?()
+                    }
                 }) {
                     HStack {
                         Spacer()
@@ -186,7 +194,8 @@ struct InfoCard<Content: View>: View {
             crowdLevel: .medium,
             distance: 0.5
         ),
-        isPresented: .constant(true)
+        isPresented: .constant(true),
+        onViewReviews: {}
     )
     .presentationDetents([.height(420)])
 }

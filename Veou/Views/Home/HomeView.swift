@@ -13,6 +13,7 @@ struct HomeView: View {
     @StateObject private var searchViewModel = SearchViewModel()
     @State private var showLocationDetail = false
     @State private var navigationPath = NavigationPath()
+    @State private var showReviewsForPlace: PlaceAnnotation?
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -91,12 +92,30 @@ struct HomeView: View {
             .navigationDestination(for: PlaceAnnotation.self) { place in
                 AddReviewView(place: place)
             }
+            .onChange(of: showReviewsForPlace) { oldValue, newValue in
+                if let place = newValue {
+                    navigationPath.append(ReviewDestination.reviews(place))
+                    showReviewsForPlace = nil
+                }
+            }
+            .navigationDestination(for: ReviewDestination.self) { destination in
+                switch destination {
+                case .reviews(let place):
+                    ReviewsView(place: place)
+                }
+            }
         }
             .sheet(isPresented: $showLocationDetail) {
                 if let place = mapViewModel.selectedPlace {
-                    LocationDetailView(place: place, isPresented: $showLocationDetail)
-                        .presentationDetents([.height(420)])
-                        .presentationDragIndicator(.hidden)
+                    LocationDetailView(
+                        place: place,
+                        isPresented: $showLocationDetail,
+                        onViewReviews: {
+                            showReviewsForPlace = place
+                        }
+                    )
+                    .presentationDetents([.height(420)])
+                    .presentationDragIndicator(.hidden)
                 }
             }
             .onAppear {
@@ -150,6 +169,11 @@ struct HomeView: View {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         #endif
     }
+}
+
+// MARK: - Navigation Destinations
+enum ReviewDestination: Hashable {
+    case reviews(PlaceAnnotation)
 }
 
 #Preview {
