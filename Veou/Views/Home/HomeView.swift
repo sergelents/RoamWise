@@ -41,6 +41,18 @@ struct HomeView: View {
                 }
             }
             
+            // Dimming overlay when tooltip is shown
+            if showReviewTooltip && mapViewModel.annotations.isEmpty {
+                Color.black.opacity(0.4)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+                    .onTapGesture {
+                        withAnimation(.easeInOut(duration: 0.4)) {
+                            showReviewTooltip = false
+                        }
+                    }
+            }
+            
             VStack(spacing: 0) {
                 SearchBarView(
                     text: $searchViewModel.searchText,
@@ -66,39 +78,53 @@ struct HomeView: View {
                 TabBarView(selectedTab: .constant(0))
             }
             
-            // Floating Action Buttons with tooltip
+            // Review tooltip modal (centered horizontally, 8pt below true center of screen)
+            if showReviewTooltip && mapViewModel.annotations.isEmpty {
+                GeometryReader { geometry in
+                    ZStack {
+                        // Position tooltip higher - speech bubble tail tip at center + 8pt
+                        VStack(spacing: 0) {
+                            Spacer()
+                                .frame(height: geometry.size.height * 0.5 + 8 - 12) // Center + 8pt minus tail height to align tail tip
+                            
+                            HStack {
+                                Spacer()
+                                ReviewTooltipView(onDismiss: {
+                                    withAnimation(.easeInOut(duration: 0.4)) {
+                                        showReviewTooltip = false
+                                    }
+                                })
+                                Spacer()
+                            }
+                            
+                            Spacer()
+                        }
+                    }
+                }
+                .transition(.asymmetric(
+                    insertion: .opacity.combined(with: .scale(scale: 0.9)),
+                    removal: .opacity.combined(with: .scale(scale: 0.9))
+                ))
+                .allowsHitTesting(true)
+            }
+            
+            // Floating Action Buttons
             VStack {
                 Spacer()
                 HStack(spacing: 0) {
                     Spacer()
                     
-                    HStack(spacing: 4) {
-                        // Review tooltip overlay
-                        if showReviewTooltip && mapViewModel.annotations.isEmpty {
-                            ReviewTooltipView()
-                                .onTapGesture {
-                                    withAnimation(.easeInOut(duration: 0.4)) {
-                                        showReviewTooltip = false
-                                    }
-                                }
-                                .transition(.asymmetric(
-                                    insertion: .opacity,
-                                    removal: .opacity
-                                ))
+                    FloatingActionButtons(
+                        annotations: mapViewModel.annotations,
+                        selectedPlace: mapViewModel.selectedPlace,
+                        onLocationTap: {
+                            mapViewModel.recenterToUserLocation()
+                        },
+                        onAddReviewTap: { place in
+                            showReviewTooltip = false
+                            navigationPath.append(place)
                         }
-                        
-                        FloatingActionButtons(
-                            annotations: mapViewModel.annotations,
-                            selectedPlace: mapViewModel.selectedPlace,
-                            onLocationTap: {
-                                mapViewModel.recenterToUserLocation()
-                            },
-                            onAddReviewTap: { place in
-                                showReviewTooltip = false
-                                navigationPath.append(place)
-                            }
-                        )
-                    }
+                    )
                     .padding(.trailing, 24)
                 }
                 .padding(.bottom, 120)
@@ -144,16 +170,6 @@ struct HomeView: View {
                         withAnimation(.easeOut(duration: 0.3)) {
                             showReviewTooltip = true
                             hasShownTooltip = true
-                        }
-                    }
-                    
-                    // Auto-dismiss after 5 seconds
-                    try? await Task.sleep(for: .seconds(5))
-                    await MainActor.run {
-                        if showReviewTooltip {
-                            withAnimation(.easeInOut(duration: 0.4)) {
-                                showReviewTooltip = false
-                            }
                         }
                     }
                 }

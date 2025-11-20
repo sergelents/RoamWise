@@ -25,7 +25,7 @@ struct VeouApp: App {
 
     var body: some Scene {
         WindowGroup {
-            HomeView()
+            ContentRootView()
         }
         .modelContainer(sharedModelContainer)
     }
