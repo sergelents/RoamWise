@@ -10,9 +10,10 @@ struct MapView: View {
     
     var body: some View {
         Map(position: $cameraPosition, interactionModes: .all) {
+            // User location with blue dot and pulsing animation
             UserAnnotation()
             
-            // Add place annotations
+            // Add place annotations - optimized for iOS 17.6
             ForEach(annotations) { place in
                 Annotation("", coordinate: place.coordinate) {
                     PinAnnotationView(
@@ -61,6 +62,7 @@ struct PinAnnotationView: View {
                 .cornerRadius(12)
                 .shadow(color: Color.black.opacity(0.15), radius: 4, x: 0, y: 2)
                 .offset(y: -8)
+                .transition(.scale.combined(with: .opacity))
             }
             
             // Pin marker
@@ -81,6 +83,7 @@ struct PinAnnotationView: View {
                     .frame(width: 16, height: 16)
             }
         }
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
     }
 }
 

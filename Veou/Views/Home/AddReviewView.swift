@@ -66,7 +66,7 @@ struct AddReviewView: View {
                             .font(.system(size: 17, weight: .semibold))
                             .foregroundColor(.primary)
                         
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                        HStack(spacing: 12) {
                             ForEach(TimeOfDay.allCases, id: \.self) { time in
                                 TimeOfDayButton(
                                     timeOfDay: time,
@@ -230,17 +230,19 @@ struct TimeOfDayButton: View {
     
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 12) {
+            VStack(spacing: 8) {
                 Image(systemName: timeOfDay.icon)
-                    .font(.system(size: 28))
+                    .font(.system(size: 24))
                     .foregroundColor(isSelected ? .blue : .gray)
                 
                 Text(timeOfDay.rawValue)
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundColor(isSelected ? .blue : .primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 100)
+            .frame(height: 80)
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .strokeBorder(isSelected ? Color.blue : Color(.systemGray4), lineWidth: isSelected ? 2 : 1)

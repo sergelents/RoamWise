@@ -124,27 +124,33 @@ struct HomeView: View {
     }
     
     private func selectLocation(_ suggestion: SearchSuggestion) {
-        withAnimation(.easeOut(duration: 0.1)) {
+        // Smoothly hide search results
+        withAnimation(.easeOut(duration: 0.2)) {
             searchViewModel.clearResults()
         }
         
         searchViewModel.searchText = suggestion.title
         dismissKeyboard()
         
-        if let coordinates = suggestion.coordinates {
-            mapViewModel.moveToLocation(
-                coordinates,
-                title: suggestion.title,
-                subtitle: suggestion.subtitle
-            )
-        } else {
-            searchViewModel.getCoordinates(for: suggestion) { coordinates in
-                if let coordinates = coordinates {
-                    mapViewModel.moveToLocation(
-                        coordinates,
-                        title: suggestion.title,
-                        subtitle: suggestion.subtitle
-                    )
+        // Use async/await for better performance on iOS 17.6
+        Task { @MainActor in
+            if let coordinates = suggestion.coordinates {
+                mapViewModel.moveToLocation(
+                    coordinates,
+                    title: suggestion.title,
+                    subtitle: suggestion.subtitle
+                )
+            } else {
+                searchViewModel.getCoordinates(for: suggestion) { coordinates in
+                    Task { @MainActor in
+                        if let coordinates = coordinates {
+                            mapViewModel.moveToLocation(
+                                coordinates,
+                                title: suggestion.title,
+                                subtitle: suggestion.subtitle
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -153,13 +159,19 @@ struct HomeView: View {
     private func performSearch() {
         guard !searchViewModel.searchText.isEmpty else { return }
         let searchText = searchViewModel.searchText
-        searchViewModel.performDetailedSearch(searchText) { coordinates in
-            if let coordinates = coordinates {
-                mapViewModel.moveToLocation(
-                    coordinates,
-                    title: searchText,
-                    subtitle: ""
-                )
+        
+        // Use async/await for better performance
+        Task { @MainActor in
+            searchViewModel.performDetailedSearch(searchText) { coordinates in
+                Task { @MainActor in
+                    if let coordinates = coordinates {
+                        mapViewModel.moveToLocation(
+                            coordinates,
+                            title: searchText,
+                            subtitle: ""
+                        )
+                    }
+                }
             }
         }
     }

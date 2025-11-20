@@ -32,22 +32,30 @@ class SearchViewModel: NSObject, ObservableObject {
         searchText = text
         showResults = !text.isEmpty
         
-        // Cancel previous search task
+        // Cancel previous search task to prevent jank
         searchTask?.cancel()
         
-        if text.isEmpty {
-            // Show popular nearby places when search is empty
-            suggestions = popularNearbyPlaces
-        } else if text.count <= 2 {
-            // Show popular places immediately for 1-2 characters
-            let filteredPopular = popularNearbyPlaces.filter { place in
-                place.title.localizedCaseInsensitiveContains(text) ||
-                place.subtitle.localizedCaseInsensitiveContains(text)
+        // Debounce search for better performance
+        searchTask = Task { @MainActor in
+            // Small delay to debounce rapid typing
+            try? await Task.sleep(for: .milliseconds(150))
+            
+            guard !Task.isCancelled else { return }
+            
+            if text.isEmpty {
+                // Show popular nearby places when search is empty
+                suggestions = popularNearbyPlaces
+            } else if text.count <= 2 {
+                // Show popular places immediately for 1-2 characters
+                let filteredPopular = popularNearbyPlaces.filter { place in
+                    place.title.localizedCaseInsensitiveContains(text) ||
+                    place.subtitle.localizedCaseInsensitiveContains(text)
+                }
+                suggestions = filteredPopular.isEmpty ? popularNearbyPlaces : filteredPopular
+            } else {
+                // For longer queries, use normal search with popular places mixed in
+                updateQuery(text)
             }
-            suggestions = filteredPopular.isEmpty ? popularNearbyPlaces : filteredPopular
-        } else {
-            // For longer queries, use normal search with popular places mixed in
-            updateQuery(text)
         }
     }
     
@@ -142,38 +150,65 @@ class SearchViewModel: NSObject, ObservableObject {
     }
     
     func getCoordinates(for suggestion: SearchSuggestion, completion: @escaping (CLLocationCoordinate2D?) -> Void) {
-        // If we already have coordinates, use them
+        // If we already have coordinates, use them immediately
         if let coordinates = suggestion.coordinates {
-            completion(coordinates)
+            Task { @MainActor in
+                completion(coordinates)
+            }
             return
         }
         
-        let request = MKLocalSearch.Request()
-        request.naturalLanguageQuery = "\(suggestion.title), \(suggestion.subtitle)"
-        
-        let search = MKLocalSearch(request: request)
-        search.start { response, _ in
-            DispatchQueue.main.async {
-                completion(response?.mapItems.first?.placemark.coordinate)
+        // Use async/await for better performance on iOS 17.6
+        Task {
+            let request = MKLocalSearch.Request()
+            request.naturalLanguageQuery = "\(suggestion.title), \(suggestion.subtitle)"
+            
+            if let userLocation = LocationManager.shared.userLocation {
+                request.region = MKCoordinateRegion(
+                    center: userLocation,
+                    span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
+                )
+            }
+            
+            let search = MKLocalSearch(request: request)
+            
+            do {
+                let response = try await search.start()
+                await MainActor.run {
+                    completion(response.mapItems.first?.placemark.coordinate)
+                }
+            } catch {
+                await MainActor.run {
+                    completion(nil)
+                }
             }
         }
     }
     
     func performDetailedSearch(_ query: String, completion: @escaping (CLLocationCoordinate2D?) -> Void) {
-        let request = MKLocalSearch.Request()
-        request.naturalLanguageQuery = query
-        
-        if let userLocation = LocationManager.shared.userLocation {
-            request.region = MKCoordinateRegion(
-                center: userLocation,
-                span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
-            )
-        }
-        
-        let search = MKLocalSearch(request: request)
-        search.start { response, _ in
-            DispatchQueue.main.async {
-                completion(response?.mapItems.first?.placemark.coordinate)
+        // Use async/await for better performance on iOS 17.6
+        Task {
+            let request = MKLocalSearch.Request()
+            request.naturalLanguageQuery = query
+            
+            if let userLocation = LocationManager.shared.userLocation {
+                request.region = MKCoordinateRegion(
+                    center: userLocation,
+                    span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
+                )
+            }
+            
+            let search = MKLocalSearch(request: request)
+            
+            do {
+                let response = try await search.start()
+                await MainActor.run {
+                    completion(response.mapItems.first?.placemark.coordinate)
+                }
+            } catch {
+                await MainActor.run {
+                    completion(nil)
+                }
             }
         }
     }

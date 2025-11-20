@@ -12,29 +12,62 @@ import CoreLocation
 
 @MainActor
 class MapViewModel: ObservableObject {
-    @Published var cameraPosition: MapCameraPosition = .region(
-        MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194),
-            span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-        )
-    )
+    @Published var cameraPosition: MapCameraPosition = .automatic
     @Published var selectedPlace: PlaceAnnotation?
     @Published var annotations: [PlaceAnnotation] = []
+    private var locationUpdateTask: Task<Void, Never>?
+    
+    init() {
+        // Request location immediately
+        LocationManager.shared.requestAuthorization()
+    }
     
     func setupInitialLocation() {
-        LocationManager.shared.requestAuthorization()
-        if let userLocation = LocationManager.shared.userLocation {
-            cameraPosition = .region(
-                MKCoordinateRegion(
-                    center: userLocation,
-                    span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+        // Try multiple times to get location
+        locationUpdateTask = Task {
+            for attempt in 0..<5 {
+                if let userLocation = LocationManager.shared.userLocation {
+                    await MainActor.run {
+                        withAnimation(.easeInOut(duration: 1.0)) {
+                            cameraPosition = .region(
+                                MKCoordinateRegion(
+                                    center: userLocation,
+                                    span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
+                                )
+                            )
+                        }
+                    }
+                    return
+                }
+                try? await Task.sleep(for: .milliseconds(500))
+            }
+            
+            // Fallback to San Francisco if location not available
+            await MainActor.run {
+                cameraPosition = .region(
+                    MKCoordinateRegion(
+                        center: CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194),
+                        span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+                    )
                 )
-            )
+            }
         }
     }
     
     func moveToLocation(_ coordinates: CLLocationCoordinate2D, title: String = "", subtitle: String = "") {
-        withAnimation {
+        // Add annotation first (non-animated)
+        let annotation = PlaceAnnotation.mock(
+            coordinate: coordinates,
+            title: title,
+            subtitle: subtitle
+        )
+        
+        // Remove any existing annotation with same coordinates to avoid duplicates
+        annotations.removeAll { $0.coordinate.latitude == coordinates.latitude && $0.coordinate.longitude == coordinates.longitude }
+        annotations.append(annotation)
+        
+        // Animate camera movement smoothly
+        withAnimation(.easeInOut(duration: 0.6)) {
             cameraPosition = .region(
                 MKCoordinateRegion(
                     center: coordinates,
@@ -42,14 +75,6 @@ class MapViewModel: ObservableObject {
                 )
             )
         }
-        
-        // Add annotation for the searched location
-        let annotation = PlaceAnnotation.mock(
-            coordinate: coordinates,
-            title: title,
-            subtitle: subtitle
-        )
-        annotations.append(annotation)
     }
     
     func selectPlace(_ place: PlaceAnnotation) {
@@ -66,7 +91,7 @@ class MapViewModel: ObservableObject {
             return
         }
         
-        withAnimation {
+        withAnimation(.easeInOut(duration: 0.6)) {
             cameraPosition = .region(
                 MKCoordinateRegion(
                     center: userLocation,
@@ -74,5 +99,9 @@ class MapViewModel: ObservableObject {
                 )
             )
         }
+    }
+    
+    deinit {
+        locationUpdateTask?.cancel()
     }
 }
