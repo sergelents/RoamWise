@@ -54,16 +54,37 @@ struct HomeView: View {
             }
             
             VStack(spacing: 0) {
-                SearchBarView(
-                    text: $searchViewModel.searchText,
-                    isActive: $searchViewModel.showResults,
-                    onTextChange: searchViewModel.updateSearchText,
-                    onSubmit: performSearch
-                )
-                .padding(.horizontal)
-                .padding(.top, 10)
-                .allowsHitTesting(true)
-                .zIndex(1)
+                ZStack(alignment: .topLeading) {
+                    SearchBarView(
+                        text: $searchViewModel.searchText,
+                        isActive: $searchViewModel.showResults,
+                        onTextChange: searchViewModel.updateSearchText,
+                        onSubmit: performSearch
+                    )
+                    .padding(.horizontal)
+                    .padding(.top, 10)
+                    .allowsHitTesting(true)
+                    .zIndex(1)
+                    
+                    // Review tooltip modal near search bar
+                    if showReviewTooltip && mapViewModel.annotations.isEmpty {
+                        HStack {
+                            Spacer()
+                            ReviewTooltipView(onDismiss: {
+                                withAnimation(.easeInOut(duration: 0.4)) {
+                                    showReviewTooltip = false
+                                }
+                            })
+                            .padding(.top, 70)
+                            .padding(.trailing, 16)
+                        }
+                        .transition(.asymmetric(
+                            insertion: .opacity.combined(with: .scale(scale: 0.9)),
+                            removal: .opacity.combined(with: .scale(scale: 0.9))
+                        ))
+                        .zIndex(2)
+                    }
+                }
                 
                 if searchViewModel.showResults && !searchViewModel.suggestions.isEmpty {
                     SearchResultsView(
@@ -76,36 +97,6 @@ struct HomeView: View {
                 
                 Spacer()
                 TabBarView(selectedTab: .constant(0))
-            }
-            
-            // Review tooltip modal (centered horizontally, 8pt below true center of screen)
-            if showReviewTooltip && mapViewModel.annotations.isEmpty {
-                GeometryReader { geometry in
-                    ZStack {
-                        // Position tooltip higher - speech bubble tail tip at center + 8pt
-                        VStack(spacing: 0) {
-                            Spacer()
-                                .frame(height: geometry.size.height * 0.5 + 8 - 12) // Center + 8pt minus tail height to align tail tip
-                            
-                            HStack {
-                                Spacer()
-                                ReviewTooltipView(onDismiss: {
-                                    withAnimation(.easeInOut(duration: 0.4)) {
-                                        showReviewTooltip = false
-                                    }
-                                })
-                                Spacer()
-                            }
-                            
-                            Spacer()
-                        }
-                    }
-                }
-                .transition(.asymmetric(
-                    insertion: .opacity.combined(with: .scale(scale: 0.9)),
-                    removal: .opacity.combined(with: .scale(scale: 0.9))
-                ))
-                .allowsHitTesting(true)
             }
             
             // Floating Action Buttons
