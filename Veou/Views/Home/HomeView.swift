@@ -48,6 +48,8 @@ struct HomeView: View {
                 )
                 .padding(.horizontal)
                 .padding(.top, 10)
+                .allowsHitTesting(true)
+                .zIndex(1)
                 
                 if searchViewModel.showResults && !searchViewModel.suggestions.isEmpty {
                     SearchResultsView(

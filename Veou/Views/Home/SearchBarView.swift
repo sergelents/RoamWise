@@ -55,6 +55,13 @@ struct SearchBarView: View {
                     .stroke(isFocused ? Color.blue.opacity(0.5) : Color.gray.opacity(0.2), lineWidth: 1)
             )
             .shadow(color: Color.black.opacity(0.15), radius: 5, x: 0, y: 5)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                // Ensure TextField gets focus immediately on tap
+                if !isFocused {
+                    isFocused = true
+                }
+            }
             
             if isFocused {
                 Button("Cancel") {
@@ -69,6 +76,7 @@ struct SearchBarView: View {
             }
         }
         .animation(.easeInOut(duration: 0.2), value: isFocused)
+        .allowsHitTesting(true)
     }
     
     private func clearSearch() {
