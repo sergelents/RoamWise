@@ -18,6 +18,8 @@ class MapViewModel: ObservableObject {
             span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
         )
     )
+    @Published var selectedPlace: PlaceAnnotation?
+    @Published var annotations: [PlaceAnnotation] = []
     
     func setupInitialLocation() {
         LocationManager.shared.requestAuthorization()
@@ -31,7 +33,7 @@ class MapViewModel: ObservableObject {
         }
     }
     
-    func moveToLocation(_ coordinates: CLLocationCoordinate2D) {
+    func moveToLocation(_ coordinates: CLLocationCoordinate2D, title: String = "", subtitle: String = "") {
         withAnimation {
             cameraPosition = .region(
                 MKCoordinateRegion(
@@ -40,6 +42,22 @@ class MapViewModel: ObservableObject {
                 )
             )
         }
+        
+        // Add annotation for the searched location
+        let annotation = PlaceAnnotation.mock(
+            coordinate: coordinates,
+            title: title,
+            subtitle: subtitle
+        )
+        annotations.append(annotation)
+    }
+    
+    func selectPlace(_ place: PlaceAnnotation) {
+        selectedPlace = place
+    }
+    
+    func deselectPlace() {
+        selectedPlace = nil
     }
     
     func recenterToUserLocation() {
