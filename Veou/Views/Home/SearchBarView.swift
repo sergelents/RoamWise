@@ -22,7 +22,7 @@ struct SearchBarView: View {
                     .foregroundColor(isFocused || !text.isEmpty ? .blue : .gray)
                     .padding(.leading, 10)
                 
-                TextField("See what people are saying", text: $text)
+                TextField("Discover", text: $text)
                     .padding(.vertical, 12)
                     .focused($isFocused)
                     .onSubmit(onSubmit)
