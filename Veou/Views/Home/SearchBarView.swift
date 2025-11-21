@@ -16,13 +16,18 @@ struct SearchBarView: View {
     @FocusState private var isFocused: Bool
     
     var body: some View {
-        HStack {
-            HStack {
+        HStack(spacing: 12) {
+            // Search bar
+            HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(isFocused || !text.isEmpty ? .blue : .gray)
-                    .padding(.leading, 10)
+                    .foregroundColor(Color.black)
+                    .font(.system(size: 16, weight: .medium))
+                    .padding(.leading, 12)
                 
-                TextField("Discover", text: $text)
+                TextField("Discover...", text: $text)
+                    .font(.system(size: 17))
+                    .foregroundColor(Color.black)
+                    .tint(Color.green) // Green cursor color
                     .padding(.vertical, 12)
                     .focused($isFocused)
                     .onSubmit(onSubmit)
@@ -39,44 +44,45 @@ struct SearchBarView: View {
                         }
                     }
                 
-                if isFocused || !text.isEmpty {
+                if !text.isEmpty {
                     Button(action: clearSearch) {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.gray)
-                            .padding(.trailing, 8)
+                            .foregroundColor(Color(red: 0.6, green: 0.6, blue: 0.6))
+                            .font(.system(size: 16))
                     }
+                    .padding(.trailing, 12)
                     .transition(.opacity)
                 }
             }
-            .background(.regularMaterial)
-            .cornerRadius(20)
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(isFocused ? Color.blue.opacity(0.5) : Color.gray.opacity(0.2), lineWidth: 1)
-            )
-            .shadow(color: Color.black.opacity(0.15), radius: 5, x: 0, y: 5)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                // Ensure TextField gets focus immediately on tap
-                if !isFocused {
-                    isFocused = true
-                }
-            }
+            .background(Color.white)
+            .cornerRadius(10)
+            .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+            .frame(maxWidth: isFocused ? nil : .infinity)
             
+            // Cancel button - plain text, appears when focused
             if isFocused {
-                Button("Cancel") {
+                Button(action: {
                     dismissKeyboard()
-                    withAnimation {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isFocused = false
                         text = ""
                         isActive = false
                     }
+                }) {
+                    Text("Cancel")
+                        .font(.system(size: 17))
+                        .foregroundColor(Color.black)
                 }
-                .foregroundColor(.blue)
                 .transition(.move(edge: .trailing).combined(with: .opacity))
             }
         }
         .animation(.easeInOut(duration: 0.2), value: isFocused)
-        .allowsHitTesting(true)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if !isFocused {
+                isFocused = true
+            }
+        }
     }
     
     private func clearSearch() {
