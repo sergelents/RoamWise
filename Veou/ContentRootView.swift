@@ -13,11 +13,11 @@ struct ContentRootView: View {
     
     var body: some View {
         Group {
-            if !hasCompletedOnboarding {
-                OnboardingView()
-                    .transition(.opacity)
-            } else if !isAuthenticated {
+            if !isAuthenticated {
                 AuthView()
+                    .transition(.opacity)
+            } else if !hasCompletedOnboarding {
+                OnboardingView()
                     .transition(.opacity)
             } else {
                 HomeView()
