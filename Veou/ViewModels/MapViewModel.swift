@@ -27,8 +27,8 @@ class MapViewModel: ObservableObject {
     }
     
     func setupInitialLocation() {
-        // Request location authorization
-        LocationManager.shared.requestAuthorization()
+        // Don't request authorization here - only request when user explicitly taps "Allow Location Access"
+        // Just use location if it's already available
         
         // Start with user location, then refine after a moment
         locationUpdateTask = Task {

@@ -154,8 +154,8 @@ struct HomeView: View {
                 // Async initialization - doesn't block UI rendering
                 mapViewModel.setupInitialLocation()
                 
-                // Show tooltip 1 second after screen loads
-                try? await Task.sleep(for: .seconds(1))
+                // Show tooltip 3 seconds after screen loads
+                try? await Task.sleep(for: .seconds(3))
                 if !hasShownTooltip && mapViewModel.annotations.isEmpty {
                     await MainActor.run {
                         withAnimation(.easeOut(duration: 0.3)) {
