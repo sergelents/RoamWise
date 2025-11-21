@@ -61,29 +61,30 @@ struct OnboardingView: View {
     var body: some View {
         ZStack {
             // Dynamic background based on current page
-            if currentPage < onboardingSteps.count {
-                onboardingSteps[currentPage].backgroundColor
-                    .ignoresSafeArea()
-                    .animation(.easeInOut(duration: 0.5), value: currentPage)
-            } else {
-                // Light purple gradient for location permission screen
-                LinearGradient(
-                    colors: [
-                        Color(red: 0.95, green: 0.92, blue: 0.98),
-                        Color.white
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
+            ZStack {
+                if currentPage < onboardingSteps.count {
+                    onboardingSteps[currentPage].backgroundColor
+                } else {
+                    // Light purple gradient for location permission screen
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.95, green: 0.92, blue: 0.98),
+                            Color.white
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                }
             }
+            .ignoresSafeArea()
+            .animation(.easeInOut(duration: 0.4), value: currentPage)
             
             VStack(spacing: 0) {
                 // Header with pagination
                 HStack {
                     if currentPage > 0 {
                         Button {
-                            withAnimation(.easeInOut(duration: 0.3)) {
+                            withAnimation(.easeInOut(duration: 0.4)) {
                                 currentPage -= 1
                             }
                         } label: {
@@ -128,39 +129,46 @@ struct OnboardingView: View {
                 .padding(.top, 20)
                 
                 // Content area with TabView
-                TabView(selection: Binding(
-                    get: { currentPage },
-                    set: { newValue in
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            currentPage = newValue
+                GeometryReader { geometry in
+                    HStack(spacing: 0) {
+                        ForEach(0..<(onboardingSteps.count + 1), id: \.self) { index in
+                            Group {
+                                if index < onboardingSteps.count {
+                                    OnboardingStepView(step: onboardingSteps[index])
+                                } else {
+                                    LocationPermissionView()
+                                }
+                            }
+                            .frame(width: geometry.size.width)
                         }
                     }
-                )) {
-                    ForEach(0..<onboardingSteps.count, id: \.self) { index in
-                        OnboardingStepView(step: onboardingSteps[index])
-                            .tag(index)
-                    }
-                    
-                    // 4th step: Location permission
-                    LocationPermissionView()
-                        .tag(onboardingSteps.count)
+                    .offset(x: -CGFloat(currentPage) * geometry.size.width)
                 }
-                .tabViewStyle(.page(indexDisplayMode: .never))
+                .animation(.easeInOut(duration: 0.4), value: currentPage)
+                .gesture(
+                    DragGesture()
+                        .onEnded { value in
+                            let threshold: CGFloat = 50
+                            if value.translation.width > threshold && currentPage > 0 {
+                                withAnimation(.easeInOut(duration: 0.4)) {
+                                    currentPage -= 1
+                                }
+                            } else if value.translation.width < -threshold && currentPage < onboardingSteps.count {
+                                withAnimation(.easeInOut(duration: 0.4)) {
+                                    currentPage += 1
+                                }
+                            }
+                        }
+                )
                 
                 // Bottom button section
                 VStack(spacing: 12) {
                     if currentPage < onboardingSteps.count {
                         // Continue button for first 3 steps
                         Button {
-                            if currentPage < onboardingSteps.count - 1 {
-                                withAnimation(.easeInOut(duration: 0.3)) {
-                                    currentPage += 1
-                                }
-                            } else {
-                                withAnimation(.easeInOut(duration: 0.3)) {
-                                    currentPage += 1 // Move to location permission screen
-                                }
-                            }
+                            let nextPage = currentPage + 1
+                            // Use the binding setter which handles animation
+                            currentPage = nextPage
                         } label: {
                             HStack(spacing: 8) {
                                 Text("Continue")
