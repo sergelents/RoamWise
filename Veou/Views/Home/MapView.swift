@@ -14,15 +14,33 @@ struct MapView: View {
             // This will automatically show when location is available
             UserAnnotation()
             
-            // Add place annotations - optimized for iOS 17.6
+            // Add place annotations with simple clean pin
             ForEach(annotations) { place in
                 Annotation("", coordinate: place.coordinate) {
-                    PinAnnotationView(
-                        place: place,
-                        isSelected: selectedPlace?.id == place.id
-                    )
-                    .onTapGesture {
-                        onPinTapped?(place)
+                    VStack(spacing: 4) {
+                        // Safety rating overlay for selected pins
+                        if selectedPlace?.id == place.id {
+                            SafetyRatingOverlay(place: place)
+                                .offset(y: -8)
+                                .transition(.scale.combined(with: .opacity))
+                        }
+                        
+                        // Simple clean pin
+                        SimplePin(isSelected: selectedPlace?.id == place.id)
+                            .onTapGesture {
+                                onPinTapped?(place)
+                            }
+                        
+                        // Location name below pin
+                        Text(place.title)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.primary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.white.opacity(0.9))
+                            .cornerRadius(8)
+                            .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+                            .offset(y: 4)
                     }
                 }
             }
@@ -76,52 +94,45 @@ struct MapView: View {
 //    }
 }
 
-// MARK: - Pin Annotation View
-struct PinAnnotationView: View {
-    let place: PlaceAnnotation
+// MARK: - Simple Clean Pin
+struct SimplePin: View {
     let isSelected: Bool
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Rating overlay (only shown for selected pin)
-            if isSelected {
-                HStack(spacing: 4) {
-                    Text(String(format: "%.1f", place.rating))
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.primary)
-                    
-                    Image(systemName: "star.fill")
-                        .font(.system(size: 12))
-                        .foregroundColor(.orange)
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(Color.white)
-                .cornerRadius(12)
-                .shadow(color: Color.black.opacity(0.15), radius: 4, x: 0, y: 2)
-                .offset(y: -8)
-                .transition(.scale.combined(with: .opacity))
-            }
+        ZStack {
+            // Outer circle
+            Circle()
+                .fill(isSelected ? Color.red : Color(red: 0.2, green: 0.6, blue: 0.9))
+                .frame(width: 32, height: 32)
+                .shadow(color: Color.black.opacity(0.2), radius: 3, x: 0, y: 2)
             
-            // Pin marker
-            ZStack {
-                // Pin shape
-                Circle()
-                    .fill(isSelected ? Color.orange : Color.green)
-                    .frame(width: 40, height: 40)
-                    .overlay(
-                        Circle()
-                            .stroke(Color.white, lineWidth: 3)
-                    )
-                    .shadow(color: Color.black.opacity(0.2), radius: 4, x: 0, y: 2)
-                
-                // Inner circle
-                Circle()
-                    .fill(Color.white)
-                    .frame(width: 16, height: 16)
-            }
+            // Inner white circle
+            Circle()
+                .fill(Color.white)
+                .frame(width: 14, height: 14)
         }
-        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
+    }
+}
+
+// MARK: - Safety Rating Overlay
+struct SafetyRatingOverlay: View {
+    let place: PlaceAnnotation
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(String(format: "%.1f", place.rating))
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(.primary)
+            
+            Image(systemName: "star.fill")
+                .font(.system(size: 12))
+                .foregroundColor(.orange)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.15), radius: 4, x: 0, y: 2)
     }
 }
 
