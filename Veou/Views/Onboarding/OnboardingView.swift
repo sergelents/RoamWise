@@ -77,16 +77,13 @@ struct OnboardingView: View {
                 }
             }
             .ignoresSafeArea()
-            .animation(.easeInOut(duration: 0.4), value: currentPage)
             
             VStack(spacing: 0) {
                 // Header with pagination
                 HStack {
                     if currentPage > 0 {
                         Button {
-                            withAnimation(.easeInOut(duration: 0.4)) {
-                                currentPage -= 1
-                            }
+                            currentPage -= 1
                         } label: {
                             Text("Back")
                                 .foregroundColor(Color(red: 0.3, green: 0.3, blue: 0.3))
@@ -144,19 +141,14 @@ struct OnboardingView: View {
                     }
                     .offset(x: -CGFloat(currentPage) * geometry.size.width)
                 }
-                .animation(.easeInOut(duration: 0.4), value: currentPage)
                 .gesture(
                     DragGesture()
                         .onEnded { value in
                             let threshold: CGFloat = 50
                             if value.translation.width > threshold && currentPage > 0 {
-                                withAnimation(.easeInOut(duration: 0.4)) {
-                                    currentPage -= 1
-                                }
+                                currentPage -= 1
                             } else if value.translation.width < -threshold && currentPage < onboardingSteps.count {
-                                withAnimation(.easeInOut(duration: 0.4)) {
-                                    currentPage += 1
-                                }
+                                currentPage += 1
                             }
                         }
                 )
