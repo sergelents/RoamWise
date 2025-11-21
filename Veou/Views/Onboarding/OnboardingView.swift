@@ -83,13 +83,21 @@ struct OnboardingView: View {
                     
                     Spacer()
                     
-                    // Animated Pagination dots
-                    AnimatedPaginationIndicator(
-                        currentPage: currentPage,
-                        totalPages: onboardingSteps.count
-                    )
-                    .frame(width: calculatePaginationWidth())
-                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: currentPage)
+                    // Pagination dots
+                    HStack(spacing: 8) {
+                        ForEach(0..<onboardingSteps.count, id: \.self) { index in
+                            if index == currentPage {
+                                Rectangle()
+                                    .fill(Color.blue)
+                                    .frame(width: 24, height: 8)
+                                    .cornerRadius(4)
+                            } else {
+                                Circle()
+                                    .fill(Color(red: 0.8, green: 0.8, blue: 0.8))
+                                    .frame(width: 8, height: 8)
+                            }
+                        }
+                    }
                     
                     Spacer()
                     
@@ -178,14 +186,6 @@ struct OnboardingView: View {
     private func completeOnboarding() {
         hasCompletedOnboarding = true
     }
-    
-    private func calculatePaginationWidth() -> CGFloat {
-        let dotSize: CGFloat = 8
-        let spacing: CGFloat = 8
-        let totalDots = CGFloat(onboardingSteps.count)
-        // Width = (dots * dotSize) + (spaces between dots)
-        return (totalDots * dotSize) + ((totalDots - 1) * spacing)
-    }
 }
 
 struct OnboardingStep {
@@ -251,50 +251,6 @@ struct OnboardingStepView: View {
             Spacer()
         }
         .padding(.vertical, 40)
-    }
-}
-
-struct AnimatedPaginationIndicator: View {
-    let currentPage: Int
-    let totalPages: Int
-    
-    private let dotSize: CGFloat = 8
-    private let activeWidth: CGFloat = 24
-    private let spacing: CGFloat = 8
-    
-    var body: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .leading) {
-                // Background dots (inactive)
-                HStack(spacing: spacing) {
-                    ForEach(0..<totalPages, id: \.self) { index in
-                        Circle()
-                            .fill(Color(red: 0.8, green: 0.8, blue: 0.8))
-                            .frame(width: dotSize, height: dotSize)
-                    }
-                }
-                
-                // Animated active indicator (blue rectangle)
-                Rectangle()
-                    .fill(Color.blue)
-                    .frame(width: activeWidth, height: 4)
-                    .cornerRadius(2)
-                    .offset(x: calculateOffset(for: currentPage))
-            }
-            .frame(width: geometry.size.width, height: dotSize, alignment: .leading)
-        }
-        .frame(height: dotSize)
-    }
-    
-    private func calculateOffset(for page: Int) -> CGFloat {
-        // Calculate the offset: center the rectangle on each dot
-        // For page 0: offset = 0 (rectangle starts at position 0, centered on first dot)
-        // For page 1: offset = dotSize + spacing (moves to second dot)
-        // For page 2: offset = 2 * (dotSize + spacing) (moves to third dot)
-        // But we need to center the rectangle (activeWidth/2) on the dot center (dotSize/2)
-        let dotCenter = CGFloat(page) * (dotSize + spacing) + dotSize / 2
-        let rectangleStart = dotCenter - activeWidth / 2
-        return rectangleStart
     }
 }
 

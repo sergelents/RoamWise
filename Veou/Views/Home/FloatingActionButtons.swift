@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct FloatingActionButtons: View {
     let annotations: [PlaceAnnotation]
@@ -28,6 +29,10 @@ struct FloatingActionButtons: View {
             
             // Add Review button (coral FAB)
             Button(action: {
+                // Haptic feedback
+                let generator = UIImpactFeedbackGenerator(style: .medium)
+                generator.impactOccurred()
+                
                 let placeToReview = selectedPlace ?? annotations.last
                 if let place = placeToReview {
                     onAddReviewTap(place)
