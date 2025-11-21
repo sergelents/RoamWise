@@ -132,14 +132,20 @@ struct LoginView: View {
                     .background(
                         LinearGradient(
                             colors: [
-                                Color(red: 0.2, green: 0.7, blue: 0.65),
-                                Color(red: 0.15, green: 0.6, blue: 0.55)
+                                Color(red: 0.2, green: 0.4, blue: 0.9),
+                                Color(red: 0.1, green: 0.3, blue: 0.8)
                             ],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
                     )
-                    .cornerRadius(12)
+                    .cornerRadius(14)
+                    .shadow(
+                        color: Color.blue.opacity(0.2),
+                        radius: 8,
+                        x: 0,
+                        y: 4
+                    )
                 }
                 .disabled(!viewModel.isLoginValid || viewModel.isLoading)
                 .opacity((viewModel.isLoginValid && !viewModel.isLoading) ? 1.0 : 0.6)
