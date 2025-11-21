@@ -92,6 +92,7 @@ struct HomeView: View {
                         onSelect: selectLocation
                     )
                     .padding(.horizontal)
+                    .padding(.top, 4)
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
                 
