@@ -79,7 +79,7 @@
 					};
 				};
 			};
-			buildConfigurationList = D5C880532DA84AE00006060C /* Build configuration list for PBXProject "Veou" */;
+			buildConfigurationList = D5C880532DA84AE00006060C /* Build configuration list for PBXProject "RoamWise" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -302,7 +302,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		D5C880532DA84AE00006060C /* Build configuration list for PBXProject "Veou" */ = {
+		D5C880532DA84AE00006060C /* Build configuration list for PBXProject "RoamWise" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D5C880662DA84AE30006060C /* Debug */,
