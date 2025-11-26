@@ -70,4 +70,11 @@ extension PlaceAnnotation {
     }
 }
 
-extension PlaceAnnotation.CrowdLevel: CaseIterable {} 
+extension PlaceAnnotation.CrowdLevel: CaseIterable {}
+
+// MARK: - AI Summary Model
+struct AISummary: Codable {
+    let overallSafetyConsensus: String
+    let keyWarnings: [String]
+    let bestTimesToVisit: [String]
+} 

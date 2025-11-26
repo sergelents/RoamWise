@@ -10,6 +10,7 @@ import SwiftUI
 struct ReviewsView: View {
     let place: PlaceAnnotation
     @State private var selectedTimeFilter: TimeFilter = .all
+    @StateObject private var summaryViewModel = ReviewSummaryViewModel()
     
     enum TimeFilter: String, CaseIterable {
         case all = "All"
@@ -119,6 +120,15 @@ struct ReviewsView: View {
                 }
                 .padding(.horizontal, 20)
                 
+                // AI Summary Section
+                AISummarySection(
+                    viewModel: summaryViewModel,
+                    reviews: filteredReviews,
+                    locationName: place.title,
+                    reviewCount: filteredReviews.count
+                )
+                .padding(.horizontal, 20)
+                
                 // Filter by time
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Filter by time")
@@ -158,6 +168,22 @@ struct ReviewsView: View {
         .navigationTitle(place.title)
         .navigationBarTitleDisplayMode(.large)
         .background(Color(.systemBackground))
+        .onAppear {
+            Task {
+                await summaryViewModel.generateSummary(
+                    reviews: filteredReviews,
+                    locationName: place.title
+                )
+            }
+        }
+        .onChange(of: selectedTimeFilter) { _ in
+            Task {
+                await summaryViewModel.generateSummary(
+                    reviews: filteredReviews,
+                    locationName: place.title
+                )
+            }
+        }
     }
     
     private func starIcon(for index: Int, rating: Double) -> String {
