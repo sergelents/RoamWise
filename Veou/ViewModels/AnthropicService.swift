@@ -19,19 +19,22 @@ class AnthropicService {
         if let key = ProcessInfo.processInfo.environment["ANTHROPIC_API_KEY"] {
             self.apiKey = key
         } else {
-            // Fallback: try to get from Info.plist (user needs to add it)
+            // Fallback: try to get from Info.plist 
             self.apiKey = Bundle.main.object(forInfoDictionaryKey: "ANTHROPIC_API_KEY") as? String ?? ""
         }
     }
     
     func generateReviewSummary(reviews: [Review], locationName: String) async throws -> AISummary {
         guard !apiKey.isEmpty else {
+            print("ERROR: Anthropic API key is missing. Set ANTHROPIC_API_KEY environment variable or add to Info.plist")
             throw AnthropicError.missingAPIKey
         }
         
         guard !reviews.isEmpty else {
             throw AnthropicError.noReviews
         }
+        
+        print("DEBUG: Generating summary for \(reviews.count) reviews at \(locationName)")
         
         let prompt = buildPrompt(reviews: reviews, locationName: locationName)
         
@@ -46,7 +49,7 @@ class AnthropicService {
         """
         
         let requestBody: [String: Any] = [
-            "model": "claude-3-5-sonnet-20241022",
+            "model": "claude-sonnet-4-5",
             "max_tokens": 1024,
             "messages": [
                 [
@@ -65,6 +68,7 @@ class AnthropicService {
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
         
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
@@ -73,17 +77,30 @@ class AnthropicService {
         }
         
         do {
+            print("DEBUG: Sending request to Anthropic API...")
             let (data, response) = try await URLSession.shared.data(for: request)
             
             guard let httpResponse = response as? HTTPURLResponse else {
                 throw AnthropicError.invalidResponse
             }
             
+            print("DEBUG: Received response with status code: \(httpResponse.statusCode)")
+            
             guard (200...299).contains(httpResponse.statusCode) else {
-                if let errorData = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                   let errorMessage = errorData["error"] as? [String: Any],
-                   let message = errorMessage["message"] as? String {
-                    throw AnthropicError.apiError(message)
+                // Log the error for debugging
+                if let errorString = String(data: data, encoding: .utf8) {
+                    print("API Error Response: \(errorString)")
+                }
+                
+                if let errorData = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    if let errorMessage = errorData["error"] as? [String: Any],
+                       let message = errorMessage["message"] as? String {
+                        throw AnthropicError.apiError(message)
+                    } else if let errorMessage = errorData["error"] as? [String: Any],
+                              let type = errorMessage["type"] as? String {
+                        let message = errorMessage["message"] as? String ?? "Unknown error"
+                        throw AnthropicError.apiError("\(type): \(message)")
+                    }
                 }
                 throw AnthropicError.httpError(httpResponse.statusCode)
             }
@@ -97,15 +114,35 @@ class AnthropicService {
                 throw AnthropicError.invalidResponse
             }
             
-            let jsonString = content.text
+            var jsonString = content.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            // Remove markdown code blocks if present
+            if jsonString.hasPrefix("```") {
+                let lines = jsonString.components(separatedBy: .newlines)
+                jsonString = lines
+                    .dropFirst() // Remove first line with ```
+                    .dropLast() // Remove last line with ```
+                    .joined(separator: "\n")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            
+            // Remove any leading/trailing whitespace or newlines
+            jsonString = jsonString.trimmingCharacters(in: .whitespacesAndNewlines)
             
             // Parse the JSON string to AISummary
             guard let jsonData = jsonString.data(using: .utf8) else {
+                print("Failed to convert JSON string to data. String: \(jsonString)")
                 throw AnthropicError.invalidResponse
             }
             
-            let summary = try decoder.decode(AISummary.self, from: jsonData)
-            return summary
+            do {
+                let summary = try decoder.decode(AISummary.self, from: jsonData)
+                return summary
+            } catch {
+                print("JSON Decoding Error: \(error)")
+                print("JSON String: \(jsonString)")
+                throw AnthropicError.decodingError("\(error.localizedDescription). JSON: \(jsonString.prefix(200))")
+            }
             
         } catch let error as AnthropicError {
             throw error

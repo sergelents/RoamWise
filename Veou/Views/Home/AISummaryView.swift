@@ -73,6 +73,7 @@ struct AISummarySection: View {
                             Text(errorMessage)
                                 .font(.system(size: 13))
                                 .foregroundColor(.gray)
+                                .fixedSize(horizontal: false, vertical: true)
                             
                             Button(action: {
                                 Task {
