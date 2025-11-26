@@ -52,8 +52,12 @@ struct AISummarySection: View {
                         .font(.system(size: 14))
                         .foregroundColor(.gray)
                     
-                    // Loading state
-                    if viewModel.isLoading {
+                    // Show cached summary immediately if available, loading only if no cache
+                    if let summary = viewModel.summary {
+                        // Show cached summary instantly
+                        summaryContent(summary: summary)
+                    } else if viewModel.isLoading {
+                        // Loading state
                         HStack {
                             ProgressView()
                                 .scaleEffect(0.8)
@@ -94,89 +98,6 @@ struct AISummarySection: View {
                         }
                         .padding(.vertical, 12)
                     }
-                    // Summary content
-                    else if let summary = viewModel.summary {
-                        VStack(alignment: .leading, spacing: 20) {
-                            // Overall Safety Consensus
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Overall Safety Consensus:")
-                                    .font(.system(size: 15, weight: .semibold))
-                                    .foregroundColor(.primary)
-                                
-                                Text(summary.overallSafetyConsensus)
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.primary)
-                                    .lineSpacing(4)
-                            }
-                            
-                            // Key Warnings
-                            if !summary.keyWarnings.isEmpty {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    HStack(spacing: 6) {
-                                        Image(systemName: "exclamation.triangle.fill")
-                                            .font(.system(size: 14))
-                                            .foregroundColor(.red)
-                                        
-                                        Text("Key Concerns:")
-                                            .font(.system(size: 15, weight: .semibold))
-                                            .foregroundColor(.primary)
-                                    }
-                                    
-                                    VStack(alignment: .leading, spacing: 6) {
-                                        ForEach(summary.keyWarnings, id: \.self) { warning in
-                                            HStack(alignment: .top, spacing: 8) {
-                                                Text("•")
-                                                    .font(.system(size: 14))
-                                                    .foregroundColor(.red)
-                                                
-                                                Text(warning)
-                                                    .font(.system(size: 14))
-                                                    .foregroundColor(.primary)
-                                                    .fixedSize(horizontal: false, vertical: true)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            // Best Times to Visit
-                            if !summary.bestTimesToVisit.isEmpty {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    HStack(spacing: 6) {
-                                        Image(systemName: "clock.fill")
-                                            .font(.system(size: 14))
-                                            .foregroundColor(.orange)
-                                        
-                                        Text("Best Time to Visit:")
-                                            .font(.system(size: 15, weight: .semibold))
-                                            .foregroundColor(.primary)
-                                    }
-                                    
-                                    VStack(alignment: .leading, spacing: 6) {
-                                        ForEach(summary.bestTimesToVisit, id: \.self) { time in
-                                            HStack(alignment: .top, spacing: 8) {
-                                                Text("•")
-                                                    .font(.system(size: 14))
-                                                    .foregroundColor(.orange)
-                                                
-                                                Text(time)
-                                                    .font(.system(size: 14))
-                                                    .foregroundColor(.primary)
-                                                    .fixedSize(horizontal: false, vertical: true)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        .padding(.bottom, 8)
-                        
-                        // Disclaimer
-                        Text("AI-generated summary • Always use your best judgment.")
-                            .font(.system(size: 12))
-                            .foregroundColor(.gray)
-                            .padding(.top, 8)
-                    }
                 }
                 .padding(.top, 8)
             }
@@ -184,6 +105,90 @@ struct AISummarySection: View {
         .padding(.horizontal, 16)
         .background(Color(.systemGray6))
         .cornerRadius(12)
+    }
+    
+    @ViewBuilder
+    private func summaryContent(summary: AISummary) -> some View {
+        VStack(alignment: .leading, spacing: 20) {
+            // Overall Safety Consensus
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Overall Safety Consensus:")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.primary)
+                
+                Text(summary.overallSafetyConsensus)
+                    .font(.system(size: 14))
+                    .foregroundColor(.primary)
+                    .lineSpacing(4)
+            }
+            
+            // Key Warnings
+            if !summary.keyWarnings.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamation.triangle.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.red)
+                        
+                        Text("Key Concerns:")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(.primary)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(summary.keyWarnings, id: \.self) { warning in
+                            HStack(alignment: .top, spacing: 8) {
+                                Text("•")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.red)
+                                
+                                Text(warning)
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.primary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Best Times to Visit
+            if !summary.bestTimesToVisit.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "clock.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.orange)
+                        
+                        Text("Best Time to Visit:")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(.primary)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(summary.bestTimesToVisit, id: \.self) { time in
+                            HStack(alignment: .top, spacing: 8) {
+                                Text("•")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.orange)
+                                
+                                Text(time)
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.primary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .padding(.bottom, 8)
+        
+        // Disclaimer
+        Text("AI-generated summary • Always use your best judgment.")
+            .font(.system(size: 12))
+            .foregroundColor(.gray)
+            .padding(.top, 8)
     }
 }
 

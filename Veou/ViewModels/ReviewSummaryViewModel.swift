@@ -18,7 +18,8 @@ class ReviewSummaryViewModel: ObservableObject {
     
     private var generateTask: Task<Void, Never>?
     private var lastReviewHash: Int?
-    private let debounceDelay: TimeInterval = 0.5 // 500ms debounce
+    private var isInitialLoad: Bool = true
+    private let debounceDelay: TimeInterval = 0.2 // 200ms debounce for filter changes only
     
     private let anthropicService = AnthropicService.shared
     
@@ -43,17 +44,24 @@ class ReviewSummaryViewModel: ObservableObject {
             summary = nil
             errorMessage = nil
             lastReviewHash = reviewHash
+            isInitialLoad = false
             return
         }
         
-        // Debounce: cancel previous task and start new one after delay
+        // Determine if this is initial load or filter change
+        let shouldDebounce = !isInitialLoad && summary != nil
+        
+        // For initial load, generate immediately. For filter changes, debounce.
         generateTask = Task { @MainActor in
-            // Wait for debounce delay
-            try? await Task.sleep(nanoseconds: UInt64(debounceDelay * 1_000_000_000))
+            // Only debounce if we have an existing summary (filter change scenario)
+            if shouldDebounce {
+                try? await Task.sleep(nanoseconds: UInt64(debounceDelay * 1_000_000_000))
+            }
             
             guard !Task.isCancelled else { return }
             
             await performSummaryGeneration(reviews: reviews, locationName: locationName, reviewHash: reviewHash)
+            isInitialLoad = false
         }
     }
     
@@ -95,6 +103,7 @@ class ReviewSummaryViewModel: ObservableObject {
         errorMessage = nil
         isLoading = false
         lastReviewHash = nil
+        isInitialLoad = true
     }
 }
 
