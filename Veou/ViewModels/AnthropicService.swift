@@ -15,8 +15,7 @@ class AnthropicService {
     private let baseURL = "https://api.anthropic.com/v1/messages"
     
     private init() {
-        // Get API key from environment variable or Info.plist
-        // For now, using environment variable. User should set ANTHROPIC_API_KEY
+        // Get API key from environment variable 
         if let key = ProcessInfo.processInfo.environment["ANTHROPIC_API_KEY"] {
             self.apiKey = key
         } else {
