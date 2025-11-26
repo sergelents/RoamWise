@@ -1,0 +1,28 @@
+# Xcode user-specific files
+xcuserdata/
+*.xcuserdatad
+*.xcuserstate
+
+# Build files
+build/
+DerivedData/
+
+# macOS
+.DS_Store
+
+# Swift Package Manager
+.swiftpm/
+.build/
+
+# CocoaPods
+Pods/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Code Injection
+iOSInjectionProject/
+
