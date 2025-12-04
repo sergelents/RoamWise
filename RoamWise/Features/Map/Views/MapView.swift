@@ -94,22 +94,82 @@ struct MapView: View {
 //    }
 }
 
-// MARK: - Simple Clean Pin
+// MARK: - Simple Clean Pin (Teal/Green Design)
 struct SimplePin: View {
     let isSelected: Bool
+    @State private var isPulsing = false
+    @State private var hasDropped = false
+    
+    // Teal/green color matching design spec
+    private let tealColor = Color(red: 0.078, green: 0.722, blue: 0.651) // #14B8A6
+    private let tealLighter = Color(red: 0.176, green: 0.831, blue: 0.749) // #2DD4BF
     
     var body: some View {
         ZStack {
-            // Outer circle
-            Circle()
-                .fill(isSelected ? Color.red : Color(red: 0.2, green: 0.6, blue: 0.9))
-                .frame(width: 32, height: 32)
-                .shadow(color: Color.black.opacity(0.2), radius: 3, x: 0, y: 2)
+            // Pulsing outer ring (animated)
+            if isPulsing {
+                Circle()
+                    .stroke(tealColor.opacity(0.3), lineWidth: 1.5)
+                    .frame(width: 56, height: 56)
+                    .scaleEffect(isPulsing ? 1.3 : 1.0)
+                    .opacity(isPulsing ? 0 : 0.6)
+                    .animation(
+                        .easeOut(duration: 1.5)
+                        .repeatForever(autoreverses: false),
+                        value: isPulsing
+                    )
+                
+                Circle()
+                    .stroke(tealColor.opacity(0.5), lineWidth: 1)
+                    .frame(width: 44, height: 44)
+                    .scaleEffect(isPulsing ? 1.2 : 1.0)
+                    .opacity(isPulsing ? 0 : 0.8)
+                    .animation(
+                        .easeOut(duration: 1.5)
+                        .repeatForever(autoreverses: false)
+                        .delay(0.2),
+                        value: isPulsing
+                    )
+            }
             
-            // Inner white circle
-            Circle()
-                .fill(Color.white)
-                .frame(width: 14, height: 14)
+            // Main pin body
+            ZStack {
+                // Gradient circle base
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [tealLighter, tealColor],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .frame(width: 36, height: 36)
+                    .shadow(color: Color.black.opacity(0.25), radius: 4, x: 0, y: 2)
+                
+                // White border ring
+                Circle()
+                    .stroke(Color.white, lineWidth: 2.5)
+                    .frame(width: 36, height: 36)
+                
+                // Map pin icon
+                Image(systemName: "mappin")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.white)
+            }
+            .scaleEffect(hasDropped ? 1.0 : 0.3)
+            .offset(y: hasDropped ? 0 : -50)
+            .opacity(hasDropped ? 1.0 : 0)
+        }
+        .onAppear {
+            // Drop animation
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.6, blendDuration: 0)) {
+                hasDropped = true
+            }
+            
+            // Start pulsing after drop
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                isPulsing = true
+            }
         }
     }
 }

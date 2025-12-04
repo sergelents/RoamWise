@@ -1,0 +1,32 @@
+<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Drop shadow filter -->
+    <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+    
+    <!-- Gradient for depth -->
+    <linearGradient id="pinGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2DD4BF"/>
+      <stop offset="100%" style="stop-color:#14B8A6"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Outer pulse ring (static - animate in code) -->
+  <circle cx="30" cy="30" r="28" fill="none" stroke="#14B8A6" stroke-width="1.5" opacity="0.3"/>
+  
+  <!-- Inner pulse ring -->
+  <circle cx="30" cy="30" r="22" fill="none" stroke="#14B8A6" stroke-width="1" opacity="0.5"/>
+  
+  <!-- Main circular base with shadow -->
+  <circle cx="30" cy="30" r="16" fill="url(#pinGradient)" filter="url(#dropShadow)"/>
+  
+  <!-- White border ring -->
+  <circle cx="30" cy="30" r="16" fill="none" stroke="white" stroke-width="2.5"/>
+  
+  <!-- Map pin icon -->
+  <g fill="white">
+    <path d="M30 20c-3.866 0-7 3.134-7 7 0 5.25 7 13 7 13s7-7.75 7-13c0-3.866-3.134-7-7-7zm0 9.5c-1.381 0-2.5-1.119-2.5-2.5s1.119-2.5 2.5-2.5 2.5 1.119 2.5 2.5-1.119 2.5-2.5 2.5z"/>
+  </g>
+</svg>
+
