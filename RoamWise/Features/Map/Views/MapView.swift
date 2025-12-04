@@ -97,7 +97,6 @@ struct MapView: View {
 // MARK: - Simple Clean Pin (Teal/Green Design)
 struct SimplePin: View {
     let isSelected: Bool
-    @State private var isPulsing = false
     @State private var hasDropped = false
     @State private var isBouncing = false
     
@@ -107,31 +106,8 @@ struct SimplePin: View {
     
     var body: some View {
         ZStack {
-            // Pulsing outer ring (animated)
-            if isPulsing {
-                Circle()
-                    .stroke(tealColor.opacity(0.3), lineWidth: 1.5)
-                    .frame(width: 56, height: 56)
-                    .scaleEffect(isPulsing ? 1.3 : 1.0)
-                    .opacity(isPulsing ? 0 : 0.6)
-                    .animation(
-                        .easeOut(duration: 1.5)
-                        .repeatForever(autoreverses: false),
-                        value: isPulsing
-                    )
-                
-                Circle()
-                    .stroke(tealColor.opacity(0.5), lineWidth: 1)
-                    .frame(width: 44, height: 44)
-                    .scaleEffect(isPulsing ? 1.2 : 1.0)
-                    .opacity(isPulsing ? 0 : 0.8)
-                    .animation(
-                        .easeOut(duration: 1.5)
-                        .repeatForever(autoreverses: false)
-                        .delay(0.2),
-                        value: isPulsing
-                    )
-            }
+            // Pulsing ring
+            PulseRing(color: tealColor, size: 36, targetScale: 1.8, duration: 1.5)
             
             // Main pin body
             ZStack {
@@ -172,9 +148,8 @@ struct SimplePin: View {
                 hasDropped = true
             }
             
-            // Start pulsing and bouncing after drop
+            // Start bouncing after drop
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                isPulsing = true
                 isBouncing = true
             }
         }
@@ -188,6 +163,35 @@ struct SimplePin: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Pulse Ring Animation
+struct PulseRing: View {
+    let color: Color
+    let size: CGFloat
+    let targetScale: CGFloat
+    let duration: Double
+    var delay: Double = 0
+    
+    @State private var isAnimating = false
+    
+    var body: some View {
+        Circle()
+            .stroke(color, lineWidth: 2)
+            .frame(width: size, height: size)
+            .scaleEffect(isAnimating ? targetScale : 1.0)
+            .opacity(isAnimating ? 0 : 0.6)
+            .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay + 0.6) {
+                    withAnimation(
+                        .easeOut(duration: duration)
+                        .repeatForever(autoreverses: false)
+                    ) {
+                        isAnimating = true
+                    }
+                }
+            }
     }
 }
 
