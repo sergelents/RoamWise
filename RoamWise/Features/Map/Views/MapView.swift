@@ -17,21 +17,21 @@ struct MapView: View {
             // Add place annotations with simple clean pin
             ForEach(annotations) { place in
                 Annotation("", coordinate: place.coordinate) {
-                    VStack(spacing: 4) {
-                        // Safety rating overlay for selected pins
-                        if selectedPlace?.id == place.id {
-                            SafetyRatingOverlay(place: place)
-                                .offset(y: -8)
-                                .transition(.scale.combined(with: .opacity))
-                        }
-                        
-                        // Simple clean pin
+                    ZStack {
+                        // Simple clean pin (anchored at center)
                         SimplePin(isSelected: selectedPlace?.id == place.id)
                             .onTapGesture {
                                 onPinTapped?(place)
                             }
                         
-                        // Location name below pin
+                        // Safety rating overlay for selected pins (positioned above)
+                        if selectedPlace?.id == place.id {
+                            SafetyRatingOverlay(place: place)
+                                .offset(y: -55)
+                                .transition(.scale.combined(with: .opacity))
+                        }
+                        
+                        // Location name below pin (positioned below)
                         Text(place.title)
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.primary)
@@ -40,7 +40,7 @@ struct MapView: View {
                             .background(Color.white.opacity(0.9))
                             .cornerRadius(8)
                             .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
-                            .offset(y: 4)
+                            .offset(y: 45)
                     }
                 }
             }
