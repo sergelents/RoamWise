@@ -7,11 +7,11 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		D5C880582DA84AE00006060C /* Veou.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Veou.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D5C880582DA84AE00006060C /* RoamWise.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RoamWise.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		D5EC73922DE6B74F00381CB8 /* Veou */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Veou; sourceTree = "<group>"; };
+		D5EC73922DE6B74F00381CB8 /* RoamWise */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = RoamWise; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -28,7 +28,7 @@
 		D5C8804F2DA84AE00006060C = {
 			isa = PBXGroup;
 			children = (
-				D5EC73922DE6B74F00381CB8 /* Veou */,
+				D5EC73922DE6B74F00381CB8 /* RoamWise */,
 				D5C880592DA84AE00006060C /* Products */,
 			);
 			sourceTree = "<group>";
@@ -36,7 +36,7 @@
 		D5C880592DA84AE00006060C /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				D5C880582DA84AE00006060C /* Veou.app */,
+				D5C880582DA84AE00006060C /* RoamWise.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -44,9 +44,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		D5C880572DA84AE00006060C /* Veou */ = {
+		D5C880572DA84AE00006060C /* RoamWise */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = D5C880682DA84AE30006060C /* Build configuration list for PBXNativeTarget "Veou" */;
+			buildConfigurationList = D5C880682DA84AE30006060C /* Build configuration list for PBXNativeTarget "RoamWise" */;
 			buildPhases = (
 				D5C880542DA84AE00006060C /* Sources */,
 				D5C880552DA84AE00006060C /* Frameworks */,
@@ -57,11 +57,11 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				D5EC73922DE6B74F00381CB8 /* Veou */,
+				D5EC73922DE6B74F00381CB8 /* RoamWise */,
 			);
-			name = Veou;
+			name = RoamWise;
 			productName = Veou;
-			productReference = D5C880582DA84AE00006060C /* Veou.app */;
+			productReference = D5C880582DA84AE00006060C /* RoamWise.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -92,7 +92,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				D5C880572DA84AE00006060C /* Veou */,
+				D5C880572DA84AE00006060C /* RoamWise */,
 			);
 		};
 /* End PBXProject section */
@@ -244,7 +244,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Veou/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"RoamWise/Preview Content\"";
 				DEVELOPMENT_TEAM = C5456SHSF7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -275,7 +275,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Veou/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"RoamWise/Preview Content\"";
 				DEVELOPMENT_TEAM = C5456SHSF7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -311,7 +311,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D5C880682DA84AE30006060C /* Build configuration list for PBXNativeTarget "Veou" */ = {
+		D5C880682DA84AE30006060C /* Build configuration list for PBXNativeTarget "RoamWise" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D5C880692DA84AE30006060C /* Debug */,

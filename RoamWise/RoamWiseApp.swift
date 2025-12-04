@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct VeouApp: App {
+struct RoamWiseApp: App {
     var body: some Scene {
         WindowGroup {
             ContentRootView()
