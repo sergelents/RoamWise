@@ -19,7 +19,7 @@ struct MapView: View {
                 Annotation("", coordinate: place.coordinate) {
                     ZStack {
                         // Simple clean pin (anchored at center)
-                        SimplePin(isSelected: selectedPlace?.id == place.id)
+                        SimplePin(isSelected: selectedPlace?.id == place.id, rating: place.rating)
                             .onTapGesture {
                                 onPinTapped?(place)
                             }
@@ -94,20 +94,44 @@ struct MapView: View {
 //    }
 }
 
-// MARK: - Simple Clean Pin (Teal/Green Design)
+// MARK: - Simple Clean Pin (Color based on Safety Rating)
 struct SimplePin: View {
     let isSelected: Bool
+    let rating: Double
     @State private var hasDropped = false
     @State private var isBouncing = false
     
-    // Teal/green color matching design spec
-    private let tealColor = Color(red: 0.078, green: 0.722, blue: 0.651) // #14B8A6
-    private let tealLighter = Color(red: 0.176, green: 0.831, blue: 0.749) // #2DD4BF
+    // Colors based on safety rating
+    private var pinColor: Color {
+        if rating >= 4.5 {
+            // Safe - Green/Teal
+            return Color(red: 0.078, green: 0.722, blue: 0.651) // #14B8A6
+        } else if rating >= 3.5 {
+            // Caution - Amber/Yellow
+            return Color(red: 0.96, green: 0.62, blue: 0.04) // #F59E0B
+        } else {
+            // Danger - Red
+            return Color(red: 0.94, green: 0.27, blue: 0.27) // #EF4444
+        }
+    }
+    
+    private var pinColorLighter: Color {
+        if rating >= 4.5 {
+            // Safe - Lighter Green/Teal
+            return Color(red: 0.176, green: 0.831, blue: 0.749) // #2DD4BF
+        } else if rating >= 3.5 {
+            // Caution - Lighter Amber
+            return Color(red: 0.99, green: 0.75, blue: 0.24) // #FBBF24
+        } else {
+            // Danger - Lighter Red
+            return Color(red: 0.97, green: 0.45, blue: 0.45) // #F87171
+        }
+    }
     
     var body: some View {
         ZStack {
             // Pulsing ring
-            PulseRing(color: tealColor, size: 36, targetScale: 1.8, duration: 1.5)
+            PulseRing(color: pinColor, size: 36, targetScale: 1.8, duration: 1.5)
             
             // Main pin body
             ZStack {
@@ -115,7 +139,7 @@ struct SimplePin: View {
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [tealLighter, tealColor],
+                            colors: [pinColorLighter, pinColor],
                             startPoint: .top,
                             endPoint: .bottom
                         )
