@@ -99,6 +99,7 @@ struct SimplePin: View {
     let isSelected: Bool
     @State private var isPulsing = false
     @State private var hasDropped = false
+    @State private var isBouncing = false
     
     // Teal/green color matching design spec
     private let tealColor = Color(red: 0.078, green: 0.722, blue: 0.651) // #14B8A6
@@ -157,8 +158,13 @@ struct SimplePin: View {
                     .foregroundColor(.white)
             }
             .scaleEffect(hasDropped ? 1.0 : 0.3)
-            .offset(y: hasDropped ? 0 : -50)
+            .offset(y: hasDropped ? (isBouncing && !isSelected ? -3 : 0) : -50)
             .opacity(hasDropped ? 1.0 : 0)
+            .animation(
+                isSelected ? .easeOut(duration: 0.2) :
+                    .easeInOut(duration: 1.2).repeatForever(autoreverses: true),
+                value: isBouncing
+            )
         }
         .onAppear {
             // Drop animation
@@ -166,9 +172,20 @@ struct SimplePin: View {
                 hasDropped = true
             }
             
-            // Start pulsing after drop
+            // Start pulsing and bouncing after drop
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                 isPulsing = true
+                isBouncing = true
+            }
+        }
+        .onChange(of: isSelected) { _, selected in
+            // Stop bouncing when selected, resume when deselected
+            if selected {
+                isBouncing = false
+            } else {
+                withAnimation {
+                    isBouncing = true
+                }
             }
         }
     }
